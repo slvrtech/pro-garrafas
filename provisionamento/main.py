@@ -13,6 +13,7 @@ Uso:
 
 from constantes import FORMATOS
 from modulo1_dep import calcular_r_dep
+from modulo2_provisionamento import calcular_garrafas_provisionadas
 
 
 def escolher_formato() -> str:
@@ -49,11 +50,30 @@ def modulo1_menu() -> None:
     print(resultado.resumo())
 
 
+def modulo2_menu() -> None:
+    print("\n=== Módulo 2: Garrafas provisionadas para a linha de produção ===")
+    codigo_formato = escolher_formato()
+    paletes = ler_inteiro_nao_negativo("Quantidade de paletes: ")
+    r_sobra = ler_inteiro_nao_negativo(
+        "R que sobraram do dia anterior (0 se não houver): "
+    )
+    garrafas_retorno = ler_inteiro_nao_negativo(
+        "Garrafas de retorno do dia anterior (0 se não houver): "
+    )
+
+    resultado = calcular_garrafas_provisionadas(
+        codigo_formato, paletes, r_sobra, garrafas_retorno
+    )
+
+    print("\n--- Resultado ---")
+    print(resultado.resumo())
+
+
 def menu_principal() -> None:
     opcoes = {
         "1": ("Módulo 1 — Quantidade de R para a máquina DEP", modulo1_menu),
-        # Próximos módulos serão adicionados aqui, por exemplo:
-        # "2": ("Módulo 2 — ...", modulo2_menu),
+        "2": ("Módulo 2 — Garrafas provisionadas para a linha de produção", modulo2_menu),
+        # Próximos módulos serão adicionados aqui.
     }
 
     while True:
