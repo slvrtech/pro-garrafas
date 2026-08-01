@@ -622,9 +622,14 @@
 
   function resetOutputM1(){
     document.getElementById("output-panel").innerHTML = EMPTY_STATE_M1;
+    document.getElementById("caixas").value = "";
   }
   function resetOutputM2(){
     document.getElementById("output-panel-m2").innerHTML = EMPTY_STATE_M2;
+    document.getElementById("m2-r-sobra").value = "";
+    document.getElementById("m2-garrafas-retorno").value = "";
+    lotesM2 = [{ codigo: "", paletes: "" }];
+    renderLotesM2();
   }
 
   renderFormatOptions("format-options", "m1", resetOutputM1);
