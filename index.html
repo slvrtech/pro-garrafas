@@ -374,7 +374,7 @@
 
   <div class="tabs" id="tabs">
     <div class="tab active" data-tab="m1"><span class="num">01</span> R para DEP</div>
-    <div class="tab disabled" data-tab="m2"><span class="num">02</span> Caixas &amp; Paletes <span class="tag">em breve</span></div>
+    <div class="tab" data-tab="m2"><span class="num">02</span> Garrafas Provisionadas</div>
     <div class="tab disabled" data-tab="m3"><span class="num">03</span> Uso &amp; Consumo <span class="tag">em breve</span></div>
   </div>
 
@@ -406,11 +406,43 @@
     </div>
   </div>
 
-  <!-- ============ MÓDULO 2 (placeholder) ============ -->
+  <!-- ============ MÓDULO 2 ============ -->
   <div id="view-m2" style="display:none;">
-    <div class="grid"><div class="panel" style="grid-column: 1 / -1;">
-      <div class="coming-soon-panel">Módulo 2 será adicionado em seguida.</div>
-    </div></div>
+    <div class="grid">
+      <div class="panel">
+        <p class="panel-title">Parâmetros</p>
+
+        <div class="field">
+          <label class="field-label">Formato da garrafa</label>
+          <div class="format-options" id="format-options-m2"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Quantidade de paletes</label>
+          <input type="number" id="m2-paletes" min="0" step="1" placeholder="ex.: 10">
+        </div>
+
+        <div class="field">
+          <label class="field-label">R que sobraram do dia anterior</label>
+          <input type="number" id="m2-r-sobra" min="0" step="1" placeholder="0">
+        </div>
+
+        <div class="field">
+          <label class="field-label">Garrafas de retorno do dia anterior</label>
+          <input type="number" id="m2-garrafas-retorno" min="0" step="1" placeholder="0">
+        </div>
+
+        <button class="btn-calc" id="btn-calcular-m2">Calcular Garrafas Provisionadas</button>
+      </div>
+
+      <div class="panel output" id="output-panel-m2">
+        <div class="empty-state">
+          Selecione um formato e informe os paletes do dia (e, se houver, a
+          sobra de R e o retorno do dia anterior) para calcular a quantidade
+          de garrafas provisionadas para a linha de produção.
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ============ MÓDULO 3 (placeholder) ============ -->
@@ -420,7 +452,7 @@
     </div></div>
   </div>
 
-  <div class="foot">MÓDULO 1 · CÁLCULO DE R — MÁQUINA DEP · v1.0</div>
+  <div class="foot">MÓDULOS 1–2 ATIVOS · MÓDULO 3 EM DESENVOLVIMENTO · v1.1</div>
 </div>
 
 <script>
@@ -434,28 +466,31 @@
     "414ml":  { nome: "414 ml",  unidadesPorCaixa: 12, rPorPalete: 8, garrafasPorR: 440 },
   };
 
-  let formatoSelecionado = "1000ml";
+  // Estado de formato selecionado por módulo (cada aba tem sua própria seleção)
+  const estadoFormato = { m1: "1000ml", m2: "1000ml" };
 
-  // ---------- renderiza os seletores de formato ----------
-  const formatOptionsEl = document.getElementById("format-options");
-  function renderFormatOptions(){
-    formatOptionsEl.innerHTML = "";
+  // ---------- renderiza os seletores de formato (reutilizável entre módulos) ----------
+  function renderFormatOptions(containerId, moduloKey, onChange){
+    const el = document.getElementById(containerId);
+    el.innerHTML = "";
     Object.entries(FORMATOS).forEach(([codigo, f]) => {
       const opt = document.createElement("label");
-      opt.className = "format-opt" + (codigo === formatoSelecionado ? " selected" : "");
+      opt.className = "format-opt" + (codigo === estadoFormato[moduloKey] ? " selected" : "");
       opt.innerHTML = `
-        <input type="radio" name="formato" value="${codigo}" ${codigo === formatoSelecionado ? "checked" : ""}>
+        <input type="radio" name="formato-${moduloKey}" value="${codigo}" ${codigo === estadoFormato[moduloKey] ? "checked" : ""}>
         <span class="fname">${f.nome}</span>
         <span class="fmeta">${f.unidadesPorCaixa} un/caixa<br>${f.garrafasPorR} garrafas/R</span>
       `;
       opt.addEventListener("click", () => {
-        formatoSelecionado = codigo;
-        renderFormatOptions();
+        estadoFormato[moduloKey] = codigo;
+        renderFormatOptions(containerId, moduloKey, onChange);
+        if(onChange) onChange();
       });
-      formatOptionsEl.appendChild(opt);
+      el.appendChild(opt);
     });
   }
-  renderFormatOptions();
+  renderFormatOptions("format-options", "m1");
+  renderFormatOptions("format-options-m2", "m2");
 
   // ---------- cálculo (mesma regra do módulo Python) ----------
   function calcularRDep(codigoFormato, caixas){
@@ -467,15 +502,15 @@
   }
 
   // ---------- renderiza o rack visual (elemento de assinatura) ----------
-  function renderRack(resultado){
-    const { formato, rNecessario } = resultado;
+  // formato: objeto de FORMATOS · rCount: quantidade de R a representar no rack
+  function renderRack(formato, rCount){
     const porPalete = formato.rPorPalete;
-    const paletesCompletos = Math.floor(rNecessario / porPalete);
-    const resto = rNecessario % porPalete;
+    const paletesCompletos = Math.floor(rCount / porPalete);
+    const resto = rCount % porPalete;
     const totalPaletes = paletesCompletos + (resto > 0 ? 1 : 0);
     const paletesParaMostrar = Math.max(totalPaletes, 1);
 
-    let filled = rNecessario;
+    let filled = rCount;
     let rows = "";
     for(let p = 0; p < paletesParaMostrar; p++){
       let slots = "";
@@ -515,7 +550,7 @@
         <div class="step"><span>Arredondado p/ cima</span><span>${rNecessario} R</span></div>
       </div>
 
-      ${renderRack(resultado)}
+      ${renderRack(formato, rNecessario)}
     `;
   }
 
@@ -530,13 +565,72 @@
       return;
     }
 
-    const resultado = calcularRDep(formatoSelecionado, caixas);
+    const resultado = calcularRDep(estadoFormato.m1, caixas);
     renderOutput(resultado);
   });
 
   // permite calcular pressionando Enter no campo de caixas
   document.getElementById("caixas").addEventListener("keydown", (e) => {
     if(e.key === "Enter") document.getElementById("btn-calcular").click();
+  });
+
+  // ---------------------------------------------------------------
+  // Módulo 2 — Garrafas provisionadas para a linha de produção
+  //   R total     = (paletes × R/palete) + R que sobraram do dia anterior
+  //   garrafas    = (R total × garrafas/R) + garrafas de retorno do dia anterior
+  // ---------------------------------------------------------------
+  function calcularGarrafasProvisionadas(codigoFormato, paletes, rSobra, garrafasRetorno){
+    const f = FORMATOS[codigoFormato];
+    const rTotal = (paletes * f.rPorPalete) + rSobra;
+    const garrafasCalculadas = rTotal * f.garrafasPorR;
+    const garrafasProvisionadas = garrafasCalculadas + garrafasRetorno;
+    return { formato: f, paletes, rSobra, rTotal, garrafasCalculadas, garrafasRetorno, garrafasProvisionadas };
+  }
+
+  const outputPanelM2 = document.getElementById("output-panel-m2");
+  function renderOutputM2(resultado){
+    const { formato, paletes, rSobra, rTotal, garrafasCalculadas, garrafasRetorno, garrafasProvisionadas } = resultado;
+    outputPanelM2.innerHTML = `
+      <p class="panel-title">Resultado <span>${formato.nome}</span></p>
+
+      <div class="result-hero">
+        <div class="value">${garrafasProvisionadas.toLocaleString("pt-BR")}</div>
+        <div class="label"><b>Garrafas provisionadas</b>para a linha de produção</div>
+      </div>
+
+      <div class="steps">
+        <div class="step"><span>Paletes × R/palete</span><span>${paletes} × ${formato.rPorPalete} = ${paletes * formato.rPorPalete} R</span></div>
+        <div class="step"><span>+ R sobra do dia anterior</span><span>+ ${rSobra} R = ${rTotal} R</span></div>
+        <div class="step"><span>R total × garrafas/R</span><span>${rTotal} × ${formato.garrafasPorR} = ${garrafasCalculadas.toLocaleString("pt-BR")}</span></div>
+        <div class="step"><span>+ garrafas de retorno</span><span>+ ${garrafasRetorno.toLocaleString("pt-BR")} = ${garrafasProvisionadas.toLocaleString("pt-BR")}</span></div>
+      </div>
+
+      ${renderRack(formato, rTotal)}
+    `;
+  }
+
+  document.getElementById("btn-calcular-m2").addEventListener("click", () => {
+    const paletes = parseInt(document.getElementById("m2-paletes").value, 10);
+    const rSobraRaw = document.getElementById("m2-r-sobra").value;
+    const garrafasRetornoRaw = document.getElementById("m2-garrafas-retorno").value;
+    const rSobra = rSobraRaw === "" ? 0 : parseInt(rSobraRaw, 10);
+    const garrafasRetorno = garrafasRetornoRaw === "" ? 0 : parseInt(garrafasRetornoRaw, 10);
+
+    if(isNaN(paletes) || paletes < 0 || isNaN(rSobra) || rSobra < 0 || isNaN(garrafasRetorno) || garrafasRetorno < 0){
+      outputPanelM2.innerHTML = `<div class="empty-state" style="border-color:#c0604a; color:#e6a596;">
+        Informe valores válidos (números inteiros maiores ou iguais a zero) em todos os campos.
+      </div>`;
+      return;
+    }
+
+    const resultado = calcularGarrafasProvisionadas(estadoFormato.m2, paletes, rSobra, garrafasRetorno);
+    renderOutputM2(resultado);
+  });
+
+  ["m2-paletes", "m2-r-sobra", "m2-garrafas-retorno"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", (e) => {
+      if(e.key === "Enter") document.getElementById("btn-calcular-m2").click();
+    });
   });
 
   // ---------- navegação entre módulos ----------

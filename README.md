@@ -31,8 +31,18 @@ R necessário      = arredondar_para_cima(garrafas totais ÷ garrafas por R)
 
 Implementado em [`provisionamento/modulo1_dep.py`](provisionamento/modulo1_dep.py).
 
+### Módulo 2 — Garrafas provisionadas para a linha de produção
+Calcula quantas garrafas estão provisionadas para a linha, considerando
+sobras e retorno do dia anterior:
+
+```
+R total                = (paletes × R por palete) + R sobra do dia anterior
+garrafas provisionadas = (R total × garrafas por R) + garrafas de retorno do dia anterior
+```
+
+Implementado em [`provisionamento/modulo2_provisionamento.py`](provisionamento/modulo2_provisionamento.py).
+
 ### Próximos módulos
-- Módulo 2 — Caixas & Paletes *(em breve)*
 - Módulo 3 — Uso & Consumo *(em breve)*
 
 ## 🖥️ Usando o site
