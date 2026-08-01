@@ -609,8 +609,26 @@
       el.appendChild(opt);
     });
   }
-  renderFormatOptions("format-options", "m1");
-  renderFormatOptions("format-options-m2", "m2");
+  const EMPTY_STATE_M1 = `<div class="empty-state">
+    Selecione um formato e informe a quantidade de caixas para calcular
+    a quantidade de R necessária para a máquina DEP.
+  </div>`;
+  const EMPTY_STATE_M2 = `<div class="empty-state">
+    Informe o formato, os lotes de paletes do dia (com seus códigos) e,
+    se houver, a sobra de R e o retorno do dia anterior — aplicados ao
+    último lote — para calcular as garrafas provisionadas por lote e o
+    total do dia.
+  </div>`;
+
+  function resetOutputM1(){
+    document.getElementById("output-panel").innerHTML = EMPTY_STATE_M1;
+  }
+  function resetOutputM2(){
+    document.getElementById("output-panel-m2").innerHTML = EMPTY_STATE_M2;
+  }
+
+  renderFormatOptions("format-options", "m1", resetOutputM1);
+  renderFormatOptions("format-options-m2", "m2", resetOutputM2);
 
   // ---------- cálculo (mesma regra do módulo Python) ----------
   function calcularRDep(codigoFormato, caixas){
