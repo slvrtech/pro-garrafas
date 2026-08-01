@@ -13,7 +13,7 @@ Uso:
 
 from constantes import FORMATOS
 from modulo1_dep import calcular_r_dep
-from modulo2_provisionamento import calcular_garrafas_provisionadas
+from modulo2_provisionamento import calcular_garrafas_provisionadas_por_lotes, LotePalete
 
 
 def escolher_formato() -> str:
@@ -50,19 +50,36 @@ def modulo1_menu() -> None:
     print(resultado.resumo())
 
 
+def ler_lotes() -> list[LotePalete]:
+    print("\nInforme os lotes de paletes que compõem o provisionamento do dia.")
+    lotes: list[LotePalete] = []
+    while True:
+        codigo = input(
+            f"Código do lote {len(lotes) + 1} (Enter para finalizar): "
+        ).strip()
+        if not codigo:
+            if not lotes:
+                print("É necessário informar ao menos um lote.")
+                continue
+            break
+        paletes = ler_inteiro_nao_negativo(f"  Paletes do lote '{codigo}': ")
+        lotes.append(LotePalete(codigo=codigo, paletes=paletes))
+    return lotes
+
+
 def modulo2_menu() -> None:
     print("\n=== Módulo 2: Garrafas provisionadas para a linha de produção ===")
     codigo_formato = escolher_formato()
-    paletes = ler_inteiro_nao_negativo("Quantidade de paletes: ")
+    lotes = ler_lotes()
     r_sobra = ler_inteiro_nao_negativo(
-        "R que sobraram do dia anterior (0 se não houver): "
+        "R que sobraram do dia anterior — aplicado ao ÚLTIMO lote (0 se não houver): "
     )
     garrafas_retorno = ler_inteiro_nao_negativo(
-        "Garrafas de retorno do dia anterior (0 se não houver): "
+        "Garrafas de retorno do dia anterior — aplicado ao ÚLTIMO lote (0 se não houver): "
     )
 
-    resultado = calcular_garrafas_provisionadas(
-        codigo_formato, paletes, r_sobra, garrafas_retorno
+    resultado = calcular_garrafas_provisionadas_por_lotes(
+        codigo_formato, lotes, r_sobra, garrafas_retorno
     )
 
     print("\n--- Resultado ---")
