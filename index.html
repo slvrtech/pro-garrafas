@@ -210,6 +210,124 @@
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button{ opacity: 0.4; }
 
+  .field-label .hint{
+    color: var(--steel);
+    font-size: 11px;
+    font-weight: 400;
+  }
+
+  .lotes-list{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .lote-row{
+    display: grid;
+    grid-template-columns: 1fr 92px 30px;
+    gap: 6px;
+    align-items: center;
+  }
+  .lote-row .lote-index{
+    position: relative;
+  }
+  .lote-row input[type="text"]{
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 10px 10px;
+    outline: none;
+    text-transform: uppercase;
+  }
+  .lote-row input[type="text"]:focus{ border-color: var(--steel); }
+  .lote-row input[type="number"]{
+    font-size: 13px;
+    padding: 10px 8px;
+  }
+  .lote-row .btn-remove-lote{
+    width: 30px;
+    height: 40px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lote-row .btn-remove-lote:hover{ border-color: var(--danger); }
+  .lote-row .btn-remove-lote:disabled{
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .btn-add-lote{
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--steel);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .btn-add-lote:hover{ border-color: var(--steel); background: rgba(91,139,166,0.06); }
+
+  /* ---------- lote breakdown table (output) ---------- */
+  .lote-card{
+    border: 1px solid var(--line-soft);
+    background: var(--bg);
+    margin-bottom: 12px;
+  }
+  .lote-card .lote-card-head{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--line-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .lote-card .lote-card-head .codigo{
+    color: var(--amber);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .lote-card .lote-card-head .badge-ultimo{
+    font-size: 9.5px;
+    background: var(--steel-dim);
+    color: var(--steel);
+    padding: 2px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  .lote-card .lote-card-body{
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .lote-card .lote-card-body .step{
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    color: var(--text-dim);
+  }
+  .lote-card .lote-card-body .step span:last-child{ color: var(--text); }
+  .lote-card .lote-card-body .step.total{
+    border-top: 1px dashed var(--line-soft);
+    margin-top: 4px;
+    padding-top: 8px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+  .lote-card .lote-card-body .step.total span:last-child{ color: var(--amber); }
+
   .btn-calc{
     width: 100%;
     margin-top: 6px;
@@ -418,17 +536,18 @@
         </div>
 
         <div class="field">
-          <label class="field-label">Quantidade de paletes</label>
-          <input type="number" id="m2-paletes" min="0" step="1" placeholder="ex.: 10">
+          <label class="field-label">Lotes de paletes</label>
+          <div class="lotes-list" id="m2-lotes-list"></div>
+          <button type="button" class="btn-add-lote" id="btn-add-lote">+ Adicionar lote</button>
         </div>
 
         <div class="field">
-          <label class="field-label">R que sobraram do dia anterior</label>
+          <label class="field-label">R que sobraram do dia anterior <span class="hint">(aplicado ao último lote)</span></label>
           <input type="number" id="m2-r-sobra" min="0" step="1" placeholder="0">
         </div>
 
         <div class="field">
-          <label class="field-label">Garrafas de retorno do dia anterior</label>
+          <label class="field-label">Garrafas de retorno do dia anterior <span class="hint">(aplicado ao último lote)</span></label>
           <input type="number" id="m2-garrafas-retorno" min="0" step="1" placeholder="0">
         </div>
 
@@ -437,9 +556,10 @@
 
       <div class="panel output" id="output-panel-m2">
         <div class="empty-state">
-          Selecione um formato e informe os paletes do dia (e, se houver, a
-          sobra de R e o retorno do dia anterior) para calcular a quantidade
-          de garrafas provisionadas para a linha de produção.
+          Informe o formato, os lotes de paletes do dia (com seus códigos) e,
+          se houver, a sobra de R e o retorno do dia anterior — aplicados ao
+          último lote — para calcular as garrafas provisionadas por lote e o
+          total do dia.
         </div>
       </div>
     </div>
@@ -576,58 +696,143 @@
 
   // ---------------------------------------------------------------
   // Módulo 2 — Garrafas provisionadas para a linha de produção
-  //   R total     = (paletes × R/palete) + R que sobraram do dia anterior
-  //   garrafas    = (R total × garrafas/R) + garrafas de retorno do dia anterior
+  //   Por lote:  R do lote = paletes do lote × R/palete
+  //              garrafas do lote = R do lote × garrafas/R
+  //   A sobra de R e o retorno de garrafas do dia anterior são
+  //   aplicados somente ao ÚLTIMO lote da lista.
   // ---------------------------------------------------------------
-  function calcularGarrafasProvisionadas(codigoFormato, paletes, rSobra, garrafasRetorno){
+  let lotesM2 = [{ codigo: "", paletes: "" }];
+
+  const lotesListEl = document.getElementById("m2-lotes-list");
+  function renderLotesM2(){
+    lotesListEl.innerHTML = "";
+    lotesM2.forEach((lote, i) => {
+      const row = document.createElement("div");
+      row.className = "lote-row";
+      row.innerHTML = `
+        <input type="text" placeholder="Código do lote (ex.: LOTE-A)" value="${lote.codigo}" data-idx="${i}" data-field="codigo">
+        <input type="number" min="0" step="1" placeholder="Paletes" value="${lote.paletes}" data-idx="${i}" data-field="paletes">
+        <button type="button" class="btn-remove-lote" data-idx="${i}" ${lotesM2.length === 1 ? "disabled" : ""}>&times;</button>
+      `;
+      lotesListEl.appendChild(row);
+    });
+
+    lotesListEl.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", (e) => {
+        const idx = Number(e.target.dataset.idx);
+        const field = e.target.dataset.field;
+        lotesM2[idx][field] = e.target.value;
+      });
+    });
+    lotesListEl.querySelectorAll(".btn-remove-lote").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const idx = Number(e.currentTarget.dataset.idx);
+        if(lotesM2.length > 1){
+          lotesM2.splice(idx, 1);
+          renderLotesM2();
+        }
+      });
+    });
+  }
+  renderLotesM2();
+
+  document.getElementById("btn-add-lote").addEventListener("click", () => {
+    lotesM2.push({ codigo: "", paletes: "" });
+    renderLotesM2();
+  });
+
+  function calcularGarrafasProvisionadasPorLotes(codigoFormato, lotes, rSobra, garrafasRetorno){
     const f = FORMATOS[codigoFormato];
-    const rTotal = (paletes * f.rPorPalete) + rSobra;
-    const garrafasCalculadas = rTotal * f.garrafasPorR;
-    const garrafasProvisionadas = garrafasCalculadas + garrafasRetorno;
-    return { formato: f, paletes, rSobra, rTotal, garrafasCalculadas, garrafasRetorno, garrafasProvisionadas };
+    const indiceUltimo = lotes.length - 1;
+
+    const resultados = lotes.map((lote, i) => {
+      const eUltimo = i === indiceUltimo;
+      const rSobraAplicada = eUltimo ? rSobra : 0;
+      const garrafasRetornoAplicada = eUltimo ? garrafasRetorno : 0;
+
+      const rTotal = (lote.paletes * f.rPorPalete) + rSobraAplicada;
+      const garrafasCalculadas = rTotal * f.garrafasPorR;
+      const garrafasProvisionadas = garrafasCalculadas + garrafasRetornoAplicada;
+
+      return {
+        codigo: lote.codigo, paletes: lote.paletes, rSobraAplicada, rTotal,
+        garrafasCalculadas, garrafasRetornoAplicada, garrafasProvisionadas, eUltimo,
+      };
+    });
+
+    const totalPaletes = resultados.reduce((s, l) => s + l.paletes, 0);
+    const totalR = resultados.reduce((s, l) => s + l.rTotal, 0);
+    const totalGarrafas = resultados.reduce((s, l) => s + l.garrafasProvisionadas, 0);
+
+    return { formato: f, lotes: resultados, totalPaletes, totalR, totalGarrafas };
   }
 
   const outputPanelM2 = document.getElementById("output-panel-m2");
   function renderOutputM2(resultado){
-    const { formato, paletes, rSobra, rTotal, garrafasCalculadas, garrafasRetorno, garrafasProvisionadas } = resultado;
+    const { formato, lotes, totalPaletes, totalR, totalGarrafas } = resultado;
+
+    const cardsHtml = lotes.map(lote => `
+      <div class="lote-card">
+        <div class="lote-card-head">
+          <span class="codigo">${lote.codigo}</span>
+          ${lote.eUltimo ? '<span class="badge-ultimo">SOBRA/RETORNO AQUI</span>' : ''}
+        </div>
+        <div class="lote-card-body">
+          <div class="step"><span>Paletes × R/palete</span><span>${lote.paletes} × ${formato.rPorPalete} = ${lote.paletes * formato.rPorPalete} R</span></div>
+          ${lote.rSobraAplicada ? `<div class="step"><span>+ R sobra do dia anterior</span><span>+ ${lote.rSobraAplicada} R</span></div>` : ''}
+          <div class="step"><span>Garrafas (R × garrafas/R)</span><span>${lote.rTotal} × ${formato.garrafasPorR} = ${lote.garrafasCalculadas.toLocaleString("pt-BR")}</span></div>
+          ${lote.garrafasRetornoAplicada ? `<div class="step"><span>+ garrafas de retorno</span><span>+ ${lote.garrafasRetornoAplicada.toLocaleString("pt-BR")}</span></div>` : ''}
+          <div class="step total"><span>Garrafas provisionadas do lote</span><span>${lote.garrafasProvisionadas.toLocaleString("pt-BR")}</span></div>
+        </div>
+      </div>
+    `).join("");
+
     outputPanelM2.innerHTML = `
       <p class="panel-title">Resultado <span>${formato.nome}</span></p>
 
       <div class="result-hero">
-        <div class="value">${garrafasProvisionadas.toLocaleString("pt-BR")}</div>
-        <div class="label"><b>Garrafas provisionadas</b>para a linha de produção</div>
+        <div class="value">${totalGarrafas.toLocaleString("pt-BR")}</div>
+        <div class="label"><b>Total de garrafas provisionadas</b>somando ${lotes.length} lote${lotes.length !== 1 ? "s" : ""} · ${totalPaletes} paletes · ${totalR} R</div>
       </div>
 
-      <div class="steps">
-        <div class="step"><span>Paletes × R/palete</span><span>${paletes} × ${formato.rPorPalete} = ${paletes * formato.rPorPalete} R</span></div>
-        <div class="step"><span>+ R sobra do dia anterior</span><span>+ ${rSobra} R = ${rTotal} R</span></div>
-        <div class="step"><span>R total × garrafas/R</span><span>${rTotal} × ${formato.garrafasPorR} = ${garrafasCalculadas.toLocaleString("pt-BR")}</span></div>
-        <div class="step"><span>+ garrafas de retorno</span><span>+ ${garrafasRetorno.toLocaleString("pt-BR")} = ${garrafasProvisionadas.toLocaleString("pt-BR")}</span></div>
-      </div>
+      <div class="rack-title" style="margin-bottom:10px;"><span>Detalhamento por lote</span></div>
+      ${cardsHtml}
 
-      ${renderRack(formato, rTotal)}
+      <div style="margin-top:22px;">
+        ${renderRack(formato, totalR)}
+      </div>
     `;
   }
 
   document.getElementById("btn-calcular-m2").addEventListener("click", () => {
-    const paletes = parseInt(document.getElementById("m2-paletes").value, 10);
     const rSobraRaw = document.getElementById("m2-r-sobra").value;
     const garrafasRetornoRaw = document.getElementById("m2-garrafas-retorno").value;
     const rSobra = rSobraRaw === "" ? 0 : parseInt(rSobraRaw, 10);
     const garrafasRetorno = garrafasRetornoRaw === "" ? 0 : parseInt(garrafasRetornoRaw, 10);
 
-    if(isNaN(paletes) || paletes < 0 || isNaN(rSobra) || rSobra < 0 || isNaN(garrafasRetorno) || garrafasRetorno < 0){
-      outputPanelM2.innerHTML = `<div class="empty-state" style="border-color:#c0604a; color:#e6a596;">
-        Informe valores válidos (números inteiros maiores ou iguais a zero) em todos os campos.
-      </div>`;
+    const lotesParaCalculo = lotesM2.map(l => ({
+      codigo: (l.codigo || "").trim(),
+      paletes: parseInt(l.paletes, 10),
+    }));
+
+    const erro =
+      lotesParaCalculo.length === 0 ? "Informe ao menos um lote." :
+      lotesParaCalculo.some(l => !l.codigo) ? "Todo lote precisa de um código." :
+      lotesParaCalculo.some(l => isNaN(l.paletes) || l.paletes < 0) ? "Informe a quantidade de paletes (número inteiro ≥ 0) em todos os lotes." :
+      (isNaN(rSobra) || rSobra < 0) ? "A sobra de R do dia anterior deve ser um número inteiro ≥ 0." :
+      (isNaN(garrafasRetorno) || garrafasRetorno < 0) ? "As garrafas de retorno devem ser um número inteiro ≥ 0." :
+      null;
+
+    if(erro){
+      outputPanelM2.innerHTML = `<div class="empty-state" style="border-color:#c0604a; color:#e6a596;">${erro}</div>`;
       return;
     }
 
-    const resultado = calcularGarrafasProvisionadas(estadoFormato.m2, paletes, rSobra, garrafasRetorno);
+    const resultado = calcularGarrafasProvisionadasPorLotes(estadoFormato.m2, lotesParaCalculo, rSobra, garrafasRetorno);
     renderOutputM2(resultado);
   });
 
-  ["m2-paletes", "m2-r-sobra", "m2-garrafas-retorno"].forEach(id => {
+  ["m2-r-sobra", "m2-garrafas-retorno"].forEach(id => {
     document.getElementById(id).addEventListener("keydown", (e) => {
       if(e.key === "Enter") document.getElementById("btn-calcular-m2").click();
     });
