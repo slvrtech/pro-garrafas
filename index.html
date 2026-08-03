@@ -567,12 +567,12 @@
         </div>
 
         <div class="field">
-          <label class="field-label">R que sobraram do dia anterior <span class="hint">(aplicado ao último lote)</span></label>
+          <label class="field-label">R que sobraram do dia anterior <span class="hint">(aplicado ao primeiro lote)</span></label>
           <input type="number" id="m2-r-sobra" min="0" step="1" placeholder="0">
         </div>
 
         <div class="field">
-          <label class="field-label">Garrafas de retorno do dia anterior <span class="hint">(aplicado ao último lote)</span></label>
+          <label class="field-label">Garrafas de retorno do dia anterior <span class="hint">(aplicado ao primeiro lote)</span></label>
           <input type="number" id="m2-garrafas-retorno" min="0" step="1" placeholder="0">
         </div>
 
@@ -583,7 +583,7 @@
         <div class="empty-state">
           Informe o formato, os lotes de paletes do dia (com seus códigos) e,
           se houver, a sobra de R e o retorno do dia anterior — aplicados ao
-          último lote — para calcular as garrafas provisionadas por lote e o
+          primeiro lote — para calcular as garrafas provisionadas por lote e o
           total do dia.
         </div>
       </div>
@@ -679,7 +679,7 @@
   const EMPTY_STATE_M2 = `<div class="empty-state">
     Informe o formato, os lotes de paletes do dia (com seus códigos) e,
     se houver, a sobra de R e o retorno do dia anterior — aplicados ao
-    último lote — para calcular as garrafas provisionadas por lote e o
+    primeiro lote — para calcular as garrafas provisionadas por lote e o
     total do dia.
   </div>`;
   const EMPTY_STATE_M3 = `<div class="empty-state">
@@ -842,12 +842,12 @@
 
   function calcularGarrafasProvisionadasPorLotes(codigoFormato, lotes, rSobra, garrafasRetorno){
     const f = FORMATOS[codigoFormato];
-    const indiceUltimo = lotes.length - 1;
+    const indicePrimeiro = 0;
 
     const resultados = lotes.map((lote, i) => {
-      const eUltimo = i === indiceUltimo;
-      const rSobraAplicada = eUltimo ? rSobra : 0;
-      const garrafasRetornoAplicada = eUltimo ? garrafasRetorno : 0;
+      const ePrimeiro = i === indicePrimeiro;
+      const rSobraAplicada = ePrimeiro ? rSobra : 0;
+      const garrafasRetornoAplicada = ePrimeiro ? garrafasRetorno : 0;
 
       const rTotal = (lote.paletes * f.rPorPalete) + rSobraAplicada;
       const garrafasCalculadas = rTotal * f.garrafasPorR;
@@ -855,7 +855,7 @@
 
       return {
         codigo: lote.codigo, paletes: lote.paletes, rSobraAplicada, rTotal,
-        garrafasCalculadas, garrafasRetornoAplicada, garrafasProvisionadas, eUltimo,
+        garrafasCalculadas, garrafasRetornoAplicada, garrafasProvisionadas, ePrimeiro,
       };
     });
 
@@ -874,7 +874,7 @@
       <div class="lote-card">
         <div class="lote-card-head">
           <span class="codigo">${lote.codigo}</span>
-          ${lote.eUltimo ? '<span class="badge-ultimo">SOBRA/RETORNO AQUI</span>' : ''}
+          ${lote.ePrimeiro ? '<span class="badge-ultimo">SOBRA/RETORNO AQUI</span>' : ''}
         </div>
         <div class="lote-card-body">
           <div class="step"><span>Paletes × R/palete</span><span>${lote.paletes} × ${formato.rPorPalete} = ${lote.paletes * formato.rPorPalete} R</span></div>

@@ -42,11 +42,11 @@ garrafas do lote = R do lote × garrafas por R do formato
 ```
 
 A sobra de R e as garrafas de retorno do dia anterior são aplicadas **uma
-única vez, somente no último lote** informado:
+única vez, somente no primeiro lote** informado:
 
 ```
-R do último lote        += R que sobraram do dia anterior
-garrafas do último lote += garrafas de retorno do dia anterior
+R do primeiro lote        += R que sobraram do dia anterior
+garrafas do primeiro lote += garrafas de retorno do dia anterior
 ```
 
 O total do dia é a soma das garrafas provisionadas de todos os lotes.
