@@ -53,8 +53,22 @@ O total do dia é a soma das garrafas provisionadas de todos os lotes.
 
 Implementado em [`provisionamento/modulo2_provisionamento.py`](provisionamento/modulo2_provisionamento.py).
 
-### Próximos módulos
-- Módulo 3 — Uso & Consumo *(em breve)*
+### Módulo 3 — Garrafas perdidas no dia de produção
+Calcula quantas garrafas foram perdidas (quebradas ou jogadas fora),
+comparando o que foi provisionado com o que efetivamente virou caixa ou
+retornou:
+
+```
+garrafas utilizadas = caixas produzidas × garrafas por caixa do formato
+garrafas perdidas    = garrafas provisionadas - garrafas utilizadas - garrafas retornadas
+```
+
+`garrafas provisionadas` normalmente é o total calculado no Módulo 2 — no
+site, há um botão de atalho para reaproveitar esse valor automaticamente.
+Se o resultado for negativo, o programa e o site sinalizam uma
+inconsistência nos dados informados.
+
+Implementado em [`provisionamento/modulo3_perdas.py`](provisionamento/modulo3_perdas.py).
 
 ## 🖥️ Usando o site
 
@@ -94,9 +108,11 @@ print(resultado.resumo())
 ├── index.html                    # Site (front-end) — publicado via GitHub Pages
 ├── README.md
 └── provisionamento/
-    ├── constantes.py             # Premissas de negócio (formatos, caixas, paletes)
-    ├── modulo1_dep.py            # Módulo 1: cálculo de R para a máquina DEP
-    └── main.py                   # Menu de linha de comando
+    ├── constantes.py              # Premissas de negócio (formatos, caixas, paletes)
+    ├── modulo1_dep.py             # Módulo 1: cálculo de R para a máquina DEP
+    ├── modulo2_provisionamento.py # Módulo 2: garrafas provisionadas por lote
+    ├── modulo3_perdas.py          # Módulo 3: garrafas perdidas no dia
+    └── main.py                    # Menu de linha de comando
 ```
 
 ## ⚠️ Observação sobre o GitHub Pages
