@@ -14,6 +14,7 @@ Uso:
 from constantes import FORMATOS
 from modulo1_dep import calcular_r_dep
 from modulo2_provisionamento import calcular_garrafas_provisionadas_por_lotes, LotePalete
+from modulo3_perdas import calcular_garrafas_perdidas
 
 
 def escolher_formato() -> str:
@@ -86,11 +87,30 @@ def modulo2_menu() -> None:
     print(resultado.resumo())
 
 
+def modulo3_menu() -> None:
+    print("\n=== Módulo 3: Garrafas perdidas no dia de produção ===")
+    codigo_formato = escolher_formato()
+    caixas_produzidas = ler_inteiro_nao_negativo("Caixas produzidas no dia: ")
+    garrafas_provisionadas = ler_inteiro_nao_negativo(
+        "Garrafas provisionadas para a linha (resultado do Módulo 2): "
+    )
+    garrafas_retornadas = ler_inteiro_nao_negativo(
+        "Garrafas retornadas no dia (0 se não houver): "
+    )
+
+    resultado = calcular_garrafas_perdidas(
+        codigo_formato, caixas_produzidas, garrafas_provisionadas, garrafas_retornadas
+    )
+
+    print("\n--- Resultado ---")
+    print(resultado.resumo())
+
+
 def menu_principal() -> None:
     opcoes = {
         "1": ("Módulo 1 — Quantidade de R para a máquina DEP", modulo1_menu),
         "2": ("Módulo 2 — Garrafas provisionadas para a linha de produção", modulo2_menu),
-        # Próximos módulos serão adicionados aqui.
+        "3": ("Módulo 3 — Garrafas perdidas no dia de produção", modulo3_menu),
     }
 
     while True:
