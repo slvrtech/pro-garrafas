@@ -9,10 +9,10 @@ separadamente para cada lote:
     garrafas do lote  = R do lote × garrafas por R do formato
 
 A sobra de R e as garrafas de retorno do dia anterior são aplicadas
-uma única vez, somente no ÚLTIMO lote informado:
+uma única vez, somente no PRIMEIRO lote informado:
 
-    R do último lote        += R que sobraram do dia anterior
-    garrafas do último lote += garrafas de retorno do dia anterior
+    R do primeiro lote        += R que sobraram do dia anterior
+    garrafas do primeiro lote += garrafas de retorno do dia anterior
 """
 
 from dataclasses import dataclass
@@ -113,10 +113,10 @@ def calcular_garrafas_provisionadas_por_lotes(
             ordem em que devem ser considerados. Deve conter ao menos
             um lote.
         r_sobra_dia_anterior: R que sobraram do dia anterior, aplicado
-            somente ao último lote (0 se não houver sobra).
+            somente ao primeiro lote (0 se não houver sobra).
         garrafas_retorno_dia_anterior: garrafas de retorno do dia
-            anterior, aplicado somente ao último lote (0 se não houver
-            retorno).
+            anterior, aplicado somente ao primeiro lote (0 se não
+            houver retorno).
 
     Returns:
         ResultadoProvisionamentoLotes com o detalhamento de cada lote
@@ -137,7 +137,7 @@ def calcular_garrafas_provisionadas_por_lotes(
     formato = obter_formato(codigo_formato)
 
     resultados: List[ResultadoLote] = []
-    indice_ultimo = len(lotes) - 1
+    indice_primeiro = 0
 
     for i, lote in enumerate(lotes):
         if not lote.codigo or not lote.codigo.strip():
@@ -147,9 +147,9 @@ def calcular_garrafas_provisionadas_por_lotes(
                 f"A quantidade de paletes do lote '{lote.codigo}' não pode ser negativa."
             )
 
-        e_ultimo_lote = i == indice_ultimo
-        r_sobra_aplicada = r_sobra_dia_anterior if e_ultimo_lote else 0
-        garrafas_retorno_aplicada = garrafas_retorno_dia_anterior if e_ultimo_lote else 0
+        e_primeiro_lote = i == indice_primeiro
+        r_sobra_aplicada = r_sobra_dia_anterior if e_primeiro_lote else 0
+        garrafas_retorno_aplicada = garrafas_retorno_dia_anterior if e_primeiro_lote else 0
 
         r_total = (lote.paletes * formato.r_por_palete) + r_sobra_aplicada
         garrafas_calculadas = r_total * formato.garrafas_por_r

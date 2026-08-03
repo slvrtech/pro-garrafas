@@ -73,10 +73,10 @@ def modulo2_menu() -> None:
     codigo_formato = escolher_formato()
     lotes = ler_lotes()
     r_sobra = ler_inteiro_nao_negativo(
-        "R que sobraram do dia anterior — aplicado ao ÚLTIMO lote (0 se não houver): "
+        "R que sobraram do dia anterior — aplicado ao PRIMEIRO lote (0 se não houver): "
     )
     garrafas_retorno = ler_inteiro_nao_negativo(
-        "Garrafas de retorno do dia anterior — aplicado ao ÚLTIMO lote (0 se não houver): "
+        "Garrafas de retorno do dia anterior — aplicado ao PRIMEIRO lote (0 se não houver): "
     )
 
     resultado = calcular_garrafas_provisionadas_por_lotes(
