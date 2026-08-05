@@ -518,7 +518,7 @@
   <div class="tabs" id="tabs">
     <div class="tab active" data-tab="m1"><span class="num">01</span> R para DEP</div>
     <div class="tab" data-tab="m2"><span class="num">02</span> Garrafas Provisionadas</div>
-    <div class="tab" data-tab="m3"><span class="num">03</span> Garrafas Perdidas</div>
+    <div class="tab" data-tab="m3"><span class="num">03</span> Garrafas Retornadas</div>
   </div>
 
   <!-- ============ MÓDULO 1 ============ -->
@@ -618,18 +618,31 @@
         </div>
 
         <div class="field">
-          <label class="field-label">Garrafas retornadas no dia</label>
-          <input type="number" id="m3-retornadas" min="0" step="1" placeholder="0">
+          <label class="field-label">
+            GR-Volta <span class="hint">(garrafas retornadas no dia)</span>
+          </label>
+          <input type="number" id="m3-gr-volta" min="0" step="1" placeholder="0">
         </div>
 
-        <button class="btn-calc" id="btn-calcular-m3">Calcular Garrafas Perdidas</button>
+        <div class="field">
+          <label class="field-label">
+            Garrafas do 1º lote
+            <span class="hint">(preencher só se houve mais de 1 lote no Módulo 2)</span>
+          </label>
+          <input type="number" id="m3-primeiro-lote" min="0" step="1" placeholder="0 = um único lote">
+          <button type="button" class="btn-use-m2" id="btn-use-m2-lote" style="display:none;">
+            Usar 1º lote calculado no Módulo 2 (<span id="btn-use-m2-lote-valor"></span>)
+          </button>
+        </div>
+
+        <button class="btn-calc" id="btn-calcular-m3">Calcular Garrafas Retornadas</button>
       </div>
 
       <div class="panel output" id="output-panel-m3">
         <div class="empty-state">
           Informe o formato, as caixas produzidas, o total provisionado para a
-          linha e as garrafas retornadas (se houver) para calcular a
-          quantidade de garrafas perdidas — quebradas ou jogadas fora — no dia.
+          linha e o GR-Volta (se houver) para calcular a
+          quantidade de garrafas retornadas no dia.
         </div>
       </div>
     </div>
@@ -684,8 +697,8 @@
   </div>`;
   const EMPTY_STATE_M3 = `<div class="empty-state">
     Informe o formato, as caixas produzidas, o total provisionado para a
-    linha e as garrafas retornadas (se houver) para calcular a quantidade
-    de garrafas perdidas — quebradas ou jogadas fora — no dia.
+    linha e o GR-Volta (se houver) para calcular a quantidade
+    de garrafas retornadas no dia.
   </div>`;
 
   function resetOutputM1(){
@@ -703,7 +716,8 @@
     document.getElementById("output-panel-m3").innerHTML = EMPTY_STATE_M3;
     document.getElementById("m3-caixas").value = "";
     document.getElementById("m3-provisionadas").value = "";
-    document.getElementById("m3-retornadas").value = "";
+    document.getElementById("m3-gr-volta").value = "";
+    document.getElementById("m3-primeiro-lote").value = "";
     updateBtnUseM2Visibility();
   }
 
@@ -930,7 +944,12 @@
     const resultado = calcularGarrafasProvisionadasPorLotes(estadoFormato.m2, lotesParaCalculo, rSobra, garrafasRetorno);
     renderOutputM2(resultado);
 
-    ultimoTotalM2 = { formato: estadoFormato.m2, total: resultado.totalGarrafas };
+    ultimoTotalM2 = {
+      formato: estadoFormato.m2,
+      total: resultado.totalGarrafas,
+      primeiroLote: resultado.lotes[0].garrafasProvisionadas,
+      numLotes: resultado.lotes.length,
+    };
     updateBtnUseM2Visibility();
   });
 
@@ -941,67 +960,98 @@
   });
 
   // ---------------------------------------------------------------
-  // Módulo 3 — Garrafas perdidas no dia de produção
-  //   garrafas utilizadas = caixas produzidas × un./caixa do formato
-  //   garrafas perdidas   = garrafas provisionadas - utilizadas - retornadas
+  // Módulo 3 — Garrafas retornadas no dia de produção
+  //   garrafas produzidas = caixas × un./caixa
+  //   SE houve mais de um lote no Módulo 2, primeiro se subtrai a
+  //   quantidade de garrafas do 1º lote das garrafas produzidas.
+  //   garrafas retornadas = provisionadas - produzidas (ajustada) - GR-Volta
   // ---------------------------------------------------------------
-  let ultimoTotalM2 = null; // { formato, total } — preenchido após calcular o Módulo 2
+  let ultimoTotalM2 = null; // { formato, total, primeiroLote, numLotes } — preenchido após calcular o Módulo 2
 
   function updateBtnUseM2Visibility(){
-    const btn = document.getElementById("btn-use-m2");
-    const valorSpan = document.getElementById("btn-use-m2-valor");
-    if(ultimoTotalM2 && ultimoTotalM2.formato === estadoFormato.m3){
-      valorSpan.textContent = ultimoTotalM2.total.toLocaleString("pt-BR");
-      btn.style.display = "block";
+    const btnTotal = document.getElementById("btn-use-m2");
+    const valorSpanTotal = document.getElementById("btn-use-m2-valor");
+    const btnLote = document.getElementById("btn-use-m2-lote");
+    const valorSpanLote = document.getElementById("btn-use-m2-lote-valor");
+
+    const disponivel = ultimoTotalM2 && ultimoTotalM2.formato === estadoFormato.m3;
+
+    if(disponivel){
+      valorSpanTotal.textContent = ultimoTotalM2.total.toLocaleString("pt-BR");
+      btnTotal.style.display = "block";
     } else {
-      btn.style.display = "none";
+      btnTotal.style.display = "none";
+    }
+
+    if(disponivel && ultimoTotalM2.numLotes > 1){
+      valorSpanLote.textContent = ultimoTotalM2.primeiroLote.toLocaleString("pt-BR");
+      btnLote.style.display = "block";
+    } else {
+      btnLote.style.display = "none";
     }
   }
 
   document.getElementById("btn-use-m2").addEventListener("click", () => {
     if(ultimoTotalM2) document.getElementById("m3-provisionadas").value = ultimoTotalM2.total;
   });
+  document.getElementById("btn-use-m2-lote").addEventListener("click", () => {
+    if(ultimoTotalM2) document.getElementById("m3-primeiro-lote").value = ultimoTotalM2.primeiroLote;
+  });
 
-  function calcularGarrafasPerdidas(codigoFormato, caixasProduzidas, garrafasProvisionadas, garrafasRetornadas){
+  function calcularGarrafasRetornadas(codigoFormato, caixasProduzidas, garrafasProvisionadas, grVolta, garrafasPrimeiroLote){
     const f = FORMATOS[codigoFormato];
-    const garrafasUtilizadas = caixasProduzidas * f.unidadesPorCaixa;
-    const garrafasPerdidas = garrafasProvisionadas - garrafasUtilizadas - garrafasRetornadas;
-    return { formato: f, caixasProduzidas, garrafasUtilizadas, garrafasProvisionadas, garrafasRetornadas, garrafasPerdidas };
+    const garrafasProduzidas = caixasProduzidas * f.unidadesPorCaixa;
+    const garrafasProduzidasAjustada = garrafasPrimeiroLote > 0
+      ? garrafasProduzidas - garrafasPrimeiroLote
+      : garrafasProduzidas;
+    const garrafasRetornadas = garrafasProvisionadas - garrafasProduzidasAjustada - grVolta;
+    return {
+      formato: f, caixasProduzidas, garrafasProduzidas, garrafasPrimeiroLote,
+      garrafasProduzidasAjustada, garrafasProvisionadas, grVolta, garrafasRetornadas,
+    };
   }
 
   const outputPanelM3 = document.getElementById("output-panel-m3");
   function renderOutputM3(resultado){
-    const { formato, caixasProduzidas, garrafasUtilizadas, garrafasProvisionadas, garrafasRetornadas, garrafasPerdidas } = resultado;
-    const inconsistente = garrafasPerdidas < 0;
+    const {
+      formato, caixasProduzidas, garrafasProduzidas, garrafasPrimeiroLote,
+      garrafasProduzidasAjustada, garrafasProvisionadas, grVolta, garrafasRetornadas,
+    } = resultado;
+    const inconsistente = garrafasRetornadas < 0;
+    const ajusteAplicado = garrafasPrimeiroLote > 0;
 
     outputPanelM3.innerHTML = `
       <p class="panel-title">Resultado <span>${formato.nome}</span></p>
 
       <div class="result-hero">
-        <div class="value" style="${inconsistente ? 'color:#c0604a;' : ''}">${garrafasPerdidas.toLocaleString("pt-BR")}</div>
-        <div class="label"><b>Garrafas perdidas</b>quebradas ou jogadas fora no dia</div>
+        <div class="value" style="${inconsistente ? 'color:#c0604a;' : ''}">${garrafasRetornadas.toLocaleString("pt-BR")}</div>
+        <div class="label"><b>Garrafas Retornadas</b>resultado final do dia</div>
       </div>
 
       <div class="steps">
-        <div class="step"><span>Caixas × un./caixa</span><span>${caixasProduzidas} × ${formato.unidadesPorCaixa} = ${garrafasUtilizadas.toLocaleString("pt-BR")}</span></div>
-        <div class="step"><span>Provisionadas − utilizadas</span><span>${garrafasProvisionadas.toLocaleString("pt-BR")} − ${garrafasUtilizadas.toLocaleString("pt-BR")} = ${(garrafasProvisionadas - garrafasUtilizadas).toLocaleString("pt-BR")}</span></div>
-        <div class="step"><span>− garrafas retornadas</span><span>− ${garrafasRetornadas.toLocaleString("pt-BR")} = ${garrafasPerdidas.toLocaleString("pt-BR")}</span></div>
+        <div class="step"><span>Caixas × un./caixa</span><span>${caixasProduzidas} × ${formato.unidadesPorCaixa} = ${garrafasProduzidas.toLocaleString("pt-BR")}</span></div>
+        ${ajusteAplicado ? `<div class="step"><span>− garrafas do 1º lote</span><span>− ${garrafasPrimeiroLote.toLocaleString("pt-BR")} = ${garrafasProduzidasAjustada.toLocaleString("pt-BR")}</span></div>` : ''}
+        <div class="step"><span>Provisionadas − produzidas${ajusteAplicado ? ' (ajustada)' : ''}</span><span>${garrafasProvisionadas.toLocaleString("pt-BR")} − ${garrafasProduzidasAjustada.toLocaleString("pt-BR")} = ${(garrafasProvisionadas - garrafasProduzidasAjustada).toLocaleString("pt-BR")}</span></div>
+        <div class="step"><span>− GR-Volta</span><span>− ${grVolta.toLocaleString("pt-BR")} = ${garrafasRetornadas.toLocaleString("pt-BR")}</span></div>
       </div>
 
-      ${inconsistente ? `<div class="warn-banner">⚠️ Resultado negativo: a soma de garrafas utilizadas e retornadas é maior do que o provisionado. Confira os valores informados.</div>` : ''}
+      ${inconsistente ? `<div class="warn-banner">⚠️ Resultado negativo: a soma de garrafas produzidas${ajusteAplicado ? ' (ajustada)' : ''} e GR-Volta é maior do que o provisionado. Confira os valores informados.</div>` : ''}
     `;
   }
 
   document.getElementById("btn-calcular-m3").addEventListener("click", () => {
     const caixas = parseInt(document.getElementById("m3-caixas").value, 10);
     const provisionadas = parseInt(document.getElementById("m3-provisionadas").value, 10);
-    const retornadasRaw = document.getElementById("m3-retornadas").value;
-    const retornadas = retornadasRaw === "" ? 0 : parseInt(retornadasRaw, 10);
+    const grVoltaRaw = document.getElementById("m3-gr-volta").value;
+    const grVolta = grVoltaRaw === "" ? 0 : parseInt(grVoltaRaw, 10);
+    const primeiroLoteRaw = document.getElementById("m3-primeiro-lote").value;
+    const primeiroLote = primeiroLoteRaw === "" ? 0 : parseInt(primeiroLoteRaw, 10);
 
     const erro =
       (isNaN(caixas) || caixas < 0) ? "Informe uma quantidade válida de caixas produzidas (número inteiro ≥ 0)." :
       (isNaN(provisionadas) || provisionadas < 0) ? "Informe uma quantidade válida de garrafas provisionadas (número inteiro ≥ 0)." :
-      (isNaN(retornadas) || retornadas < 0) ? "As garrafas retornadas devem ser um número inteiro ≥ 0." :
+      (isNaN(grVolta) || grVolta < 0) ? "O GR-Volta deve ser um número inteiro ≥ 0." :
+      (isNaN(primeiroLote) || primeiroLote < 0) ? "As garrafas do 1º lote devem ser um número inteiro ≥ 0." :
       null;
 
     if(erro){
@@ -1009,11 +1059,11 @@
       return;
     }
 
-    const resultado = calcularGarrafasPerdidas(estadoFormato.m3, caixas, provisionadas, retornadas);
+    const resultado = calcularGarrafasRetornadas(estadoFormato.m3, caixas, provisionadas, grVolta, primeiroLote);
     renderOutputM3(resultado);
   });
 
-  ["m3-caixas", "m3-provisionadas", "m3-retornadas"].forEach(id => {
+  ["m3-caixas", "m3-provisionadas", "m3-gr-volta", "m3-primeiro-lote"].forEach(id => {
     document.getElementById(id).addEventListener("keydown", (e) => {
       if(e.key === "Enter") document.getElementById("btn-calcular-m3").click();
     });

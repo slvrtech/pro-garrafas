@@ -53,18 +53,34 @@ O total do dia é a soma das garrafas provisionadas de todos os lotes.
 
 Implementado em [`provisionamento/modulo2_provisionamento.py`](provisionamento/modulo2_provisionamento.py).
 
-### Módulo 3 — Garrafas perdidas no dia de produção
-Calcula quantas garrafas foram perdidas (quebradas ou jogadas fora),
-comparando o que foi provisionado com o que efetivamente virou caixa ou
-retornou:
+### Módulo 3 — Garrafas retornadas no dia de produção
+Calcula a quantidade de garrafas retornadas, comparando o que foi
+provisionado com o que efetivamente virou caixa ou voltou no dia (GR-Volta):
 
 ```
-garrafas utilizadas = caixas produzidas × garrafas por caixa do formato
-garrafas perdidas    = garrafas provisionadas - garrafas utilizadas - garrafas retornadas
+garrafas produzidas = caixas produzidas × garrafas por caixa do formato
 ```
 
-`garrafas provisionadas` normalmente é o total calculado no Módulo 2 — no
-site, há um botão de atalho para reaproveitar esse valor automaticamente.
+Se o provisionamento do dia foi formado por **mais de um lote** (Módulo 2),
+primeiro se subtrai a quantidade de garrafas do **primeiro lote** das
+garrafas produzidas:
+
+```
+garrafas produzidas (ajustada) = garrafas produzidas - garrafas do 1º lote
+```
+
+Caso contrário (um único lote), a quantidade de garrafas produzidas
+permanece a original. O resultado final é:
+
+```
+garrafas retornadas = garrafas provisionadas - garrafas produzidas (ajustada) - GR-Volta
+```
+
+`GR-Volta` é o campo de garrafas que retornaram no próprio dia (antigo
+"garrafas retornadas" de entrada, renomeado para não se confundir com o
+resultado final). `garrafas provisionadas` e `garrafas do 1º lote`
+normalmente vêm do total e do primeiro lote calculados no Módulo 2 — no
+site, há botões de atalho para reaproveitar esses valores automaticamente.
 Se o resultado for negativo, o programa e o site sinalizam uma
 inconsistência nos dados informados.
 
