@@ -14,7 +14,7 @@ Uso:
 from constantes import FORMATOS
 from modulo1_dep import calcular_r_dep
 from modulo2_provisionamento import calcular_garrafas_provisionadas_por_lotes, LotePalete
-from modulo3_perdas import calcular_garrafas_perdidas
+from modulo3_perdas import calcular_garrafas_retornadas
 
 
 def escolher_formato() -> str:
@@ -88,18 +88,32 @@ def modulo2_menu() -> None:
 
 
 def modulo3_menu() -> None:
-    print("\n=== Módulo 3: Garrafas perdidas no dia de produção ===")
+    print("\n=== Módulo 3: Garrafas retornadas no dia de produção ===")
     codigo_formato = escolher_formato()
     caixas_produzidas = ler_inteiro_nao_negativo("Caixas produzidas no dia: ")
     garrafas_provisionadas = ler_inteiro_nao_negativo(
-        "Garrafas provisionadas para a linha (resultado do Módulo 2): "
+        "Garrafas provisionadas para a linha (total do Módulo 2): "
     )
-    garrafas_retornadas = ler_inteiro_nao_negativo(
-        "Garrafas retornadas no dia (0 se não houver): "
+    gr_volta = ler_inteiro_nao_negativo(
+        "GR-Volta — garrafas retornadas no dia (0 se não houver): "
     )
 
-    resultado = calcular_garrafas_perdidas(
-        codigo_formato, caixas_produzidas, garrafas_provisionadas, garrafas_retornadas
+    mais_de_um_lote = input(
+        "O provisionamento do dia foi formado por mais de um lote? (s/N): "
+    ).strip().lower() == "s"
+
+    garrafas_primeiro_lote = 0
+    if mais_de_um_lote:
+        garrafas_primeiro_lote = ler_inteiro_nao_negativo(
+            "Garrafas provisionadas apenas no 1º lote (Módulo 2): "
+        )
+
+    resultado = calcular_garrafas_retornadas(
+        codigo_formato,
+        caixas_produzidas,
+        garrafas_provisionadas,
+        gr_volta,
+        garrafas_primeiro_lote,
     )
 
     print("\n--- Resultado ---")
@@ -110,7 +124,7 @@ def menu_principal() -> None:
     opcoes = {
         "1": ("Módulo 1 — Quantidade de R para a máquina DEP", modulo1_menu),
         "2": ("Módulo 2 — Garrafas provisionadas para a linha de produção", modulo2_menu),
-        "3": ("Módulo 3 — Garrafas perdidas no dia de produção", modulo3_menu),
+        "3": ("Módulo 3 — Garrafas retornadas no dia de produção", modulo3_menu),
     }
 
     while True:
