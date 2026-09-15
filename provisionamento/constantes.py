@@ -33,7 +33,7 @@ FORMATOS: dict[str, FormatoGarrafa] = {
         nome="1000 ml",
         volume_ml=1000,
         unidades_por_caixa=6,
-        r_por_palete=7,
+        r_por_palete=5,
         garrafas_por_r=217,
     ),
     "414ml": FormatoGarrafa(
