@@ -13,7 +13,7 @@ acesso interativo.
 
 | Formato | Garrafas por caixa | R por palete | Garrafas por R |
 |---|---|---|---|
-| 1000 ml | 6 | 7 | 217 |
+| 1000 ml | 6 | 5 | 217 |
 | 414 ml | 12 | 8 | 440 |
 
 Essas premissas estão centralizadas em [`provisionamento/constantes.py`](provisionamento/constantes.py)
